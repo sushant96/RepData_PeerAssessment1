@@ -8,8 +8,10 @@ output: html_document
 ### Load the data
 
 ```{r}
+# The downloaded file activity.csv is placed in working directory
 getwd()
 x <- read.csv("activity.csv")
+dim(x)
 ```
 
 ## What is mean total number of steps taken per day?
@@ -17,7 +19,10 @@ x <- read.csv("activity.csv")
 ### Make a histogram of the total number of steps taken each day
 
 ```{r}
+# Aggregate total steps by date
 aggdata <-aggregate(x$steps,by=list(x$date),FUN=sum,na.rm=TRUE)
+
+# Create Histogram 
 hist(aggdata$x,main="Histogram of Total Number of Steps",xlab="Steps",col = "RED")
 ```
 
@@ -37,13 +42,19 @@ aggregate(x$steps,by=list(x$date),FUN=median,na.rm=TRUE)
 ### Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
 ```{r}
+# Aggregate data for average steps by interval
 aggdata <-aggregate(x$steps,by=list(x$interval),FUN=mean,na.rm=TRUE)
+
+# Generate time series plot
 plot(aggdata$Group.1,aggdata$x,type="l",xlab="Interval",ylab="Average Steps Taken")
 ```
 
 ### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 ```{r}
+# Aggregate data for average steps by interval
 aggdata <-aggregate(x$steps,by=list(x$interval),FUN=mean,na.rm=TRUE)
+
+#Calulate maximum steps interval 
 aggdata[which.max(aggdata$x),]
 # The interval is 835
 ```
@@ -71,10 +82,10 @@ names(aggdata) <- c("date", "Mean")
 # Merge x(original data set) and aggdata(data set with mean values for each day) to add a column Mean
 xxx <- merge(x,aggdata,by="date")
 
-# Replace all NA values from "steps" from "Mean" column
+# Replace all NA values of "steps" from calculated "Mean" column where "Mean" is NOT "NA"
 xxx$steps[is.na(xxx$steps)] <- xxx$Mean[is.na(xxx$Mean)]
 
-# Replace all NA values with overall mean values for all dates that has no steps values like "2012-10-01"
+# Replace all NA values of "steps" from calculated "Mean" column where "Mean" is "NA" with overall mean values for those dates where all values are NA like "2012-10-01"
 xxx[is.na(xxx)] <- mean(xxx$steps,na.rm=TRUE)
 
 # Make equivalent data set with all NA values replaced
@@ -86,8 +97,16 @@ dim(dataset)
 ### Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 ```{r}
+# Aggregate data for average steps by date for new data set
 aggdata <-aggregate(dataset$steps,by=list(dataset$date),FUN=sum,na.rm=TRUE)
 hist(aggdata$x,main="Histogram of Total Number of Steps",xlab="Steps",col = "BLUE")
+
+# New Mean of total number of steps 
+aggregate(dataset$steps,by=list(dataset$date),FUN=mean,na.rm=TRUE)
+
+# New Median of total number of steps
+aggregate(dataset$steps,by=list(dataset$date),FUN=median,na.rm=TRUE)
+
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -95,16 +114,25 @@ hist(aggdata$x,main="Histogram of Total Number of Steps",xlab="Steps",col = "BLU
 ### Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
 ```{r}
+# Add new column "day" which has two values “weekday” and “weekend” based on day of week
 dataset$day <- ifelse(weekdays(as.Date(dataset$date)) %in% c("Saturday","Sunday"),"weekend", "weekday")
 ```
 
 ### Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
 ```{r}
+# Aggregate data for average steps by day and interval for new data set
+aggdata <-aggregate(dataset$steps,by=list(dataset$interval,dataset$day),FUN=mean,na.rm=TRUE)
+names(aggdata) <- c("interval", "day","steps")                    
+
 library(ggplot2)
-ggplot(dataset, aes(x = interval, y = steps, group = day)) +
-geom_line() +
-facet_wrap( ~ day,nrow=2) 
+ggplot(aggdata, aes(x = interval, y = steps, group = day)) +
+  geom_line() +
+  facet_wrap( ~ day,nrow=2) 
+
+# Create HTML and md file using knitr package from R console
+# knit2html("PA1_template.Rmd")
+
 ```
 
 
